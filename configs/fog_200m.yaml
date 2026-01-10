@@ -1,0 +1,5 @@
+# 200m Visibility Configuration
+# Very clear conditions - minimal fog effects
+# Parameters epsilon, a, b, lambda_param are computed from visibility using chamfer metric
+fog:
+  visibility: 200.0   # meters - very clear

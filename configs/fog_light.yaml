@@ -1,0 +1,5 @@
+# Light Fog Configuration
+# Slight visibility degradation
+# Parameters epsilon, a, b, lambda_param are computed from visibility using chamfer metric
+fog:
+  visibility: 100.0  # meters - light fog

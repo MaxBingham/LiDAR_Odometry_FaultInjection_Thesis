@@ -1,0 +1,5 @@
+# Medium Fog Configuration
+# Moderate visibility degradation
+# Parameters epsilon, a, b, lambda_param are computed from visibility using chamfer metric
+fog:
+  visibility: 50.0   # meters - medium fog

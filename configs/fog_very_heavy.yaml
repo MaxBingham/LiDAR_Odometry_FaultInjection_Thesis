@@ -1,0 +1,5 @@
+# Very Heavy Fog Configuration
+# Severe visibility degradation
+# Parameters epsilon, a, b, lambda_param are computed from visibility using chamfer metric
+fog:
+  visibility: 10.0   # meters - very heavy fog
