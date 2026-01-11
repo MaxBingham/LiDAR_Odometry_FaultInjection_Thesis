@@ -14,8 +14,6 @@ class FogSimulator:
     #Expand with Fog + Rain model 
 
     def apply_noise(self, points: np.ndarray)  -> np.ndarray:
-        if len(points) == 0:
-            return points
             
         if points is None or len(points) == 0:
             return points

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import csv
+from html import parser
 import numpy as np
 from pathlib import Path
 import argparse
 
 from kiss_icp.pipeline import OdometryPipeline
 from fog_dataset import FogDataset
-from fog_simulator import FogSimulator
+from TEST_Noise import FogSimulator as GaussianNoiseSimulator
+from FOG_Injector import FogSimulator
 
 from metrics import evo_ape_kitti, evo_rpe_kitti
 from fog_dataset import load_scan
@@ -42,11 +44,23 @@ def main ():
     ap.add_argument("--output", default="results/fog_metrics.csv")
     ap.add_argument("--skip-metrics", action="store_true",
                     help="Skip evo metrics and CSV saving (only run Kiss-ICP)")
+    ap.add_argument('--fault-type', type=str, choices=['gaussian','fog'], default='gaussian',
+                    help="Type of fault to inject: 'gaussian' or 'fog'")
+    ap.add_argument('--visibility', type=float, default=50.0,
+                    help='Visibility distance for fog simulation (meters)')
+    ap.add_argument('--distance', type=float, default=10.0,
+                    help='Distance parameter for fog simulation')
+    
 
     args = ap.parse_args()
 
     out_dir = Path("results")
     out_dir.mkdir(exist_ok=True)
+
+    #Control the path works
+
+    
+
 
     csv_path = Path(args.output)
 
@@ -70,19 +84,41 @@ def main ():
             run_id += 1
             np.random.seed(seed)
 
-            #1 fog model 
-            fog = FogSimulator(sigma=sigma)
+            #1 Create simulator based on fault type
+            if args.fault_type == 'gaussian':
+                simulator = GaussianNoiseSimulator(sigma=sigma)
+            elif args.fault_type == 'fog':
+                simulator = FogSimulator(distance=args.distance, V=args.visibility)
+            else:
+                raise ValueError(f"Unknown fault type: {args.fault_type}")
 
             #2 dataset
-            dataset = FogDataset(data_dir=args.data, modifier=fog)
+            dataset = FogDataset(data_dir=args.data, modifier=simulator)
 
             #3 run odometry
             poses = run_odometry(dataset)
             est_path = out_dir / f"est_poses_sigma_{sigma:.2f}_seed_{seed}.txt"
             save_poses_kitti(est_path, poses)
             
-            print(f"[Run {run_id}] sigma={sigma:.3f}, seed={seed}")
+            # Collect fog statistics
+            if args.fault_type == 'fog':
+                total_pts = simulator.stats['total']
+                deleted_pts = simulator.stats['deleted']
+                backscattered_pts = simulator.stats['backscattered']
+                p_delete_val = 1 + simulator.a * np.exp(simulator.b * simulator.V)
+                lambda_val = simulator.lambda_
+            else:
+                total_pts = 0
+                deleted_pts = 0
+                backscattered_pts = 0
+                p_delete_val = 0
+                lambda_val = 0
+            
+            print(f"[Run {run_id}] fault_type={args.fault_type}, sigma={sigma:.3f}, seed={seed}")
             print(f"  Saved: {est_path}")
+            if args.fault_type == 'fog':
+                print(f"  Fog Stats: Total={total_pts}, Deleted={deleted_pts}, Backscattered={backscattered_pts}")
+                print(f"  p_delete={p_delete_val:.3f}, lambda={lambda_val:.3f}m")
 
             if not args.skip_metrics: #Can skip metrics (currently not working) by using argument: --skip-metrics
                 # 4) Run evo metrics
@@ -109,10 +145,16 @@ def main ():
                     writer = csv.writer(f)
                     writer.writerow([
                         run_id,
+                        args.fault_type,
                         sigma,
                         seed,
                         ape_rmse,
-                        rpe_rmse
+                        rpe_rmse,
+                        total_pts,
+                        deleted_pts,
+                        backscattered_pts,
+                        p_delete_val,
+                        lambda_val
                     ])
     if not args.skip_metrics:
         print(f"\n✓ Done. Results saved to {csv_path}")

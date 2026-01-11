@@ -1,20 +1,19 @@
 import numpy as np
 from pathlib import Path
-from fog_simulator import FogSimulator
 import open3d as o3d
 
 "Load original scans" 
 def load_scan(filepath) -> np.ndarray:
     scan = np.fromfile(filepath, dtype=np.float32)
-
     scan = scan.reshape((-1, 4))
-    return scan[:, :3]
+    return scan[:, :3]  # Return only xyz
+
 
 #!!!! possibly error due to missmatch in arrays 
 "create foggy dataset wrapper"
 class FogDataset:
 
-    def __init__(self, data_dir, modifier=None, voxel_size=0.2):   #adjust downsample size here
+    def __init__(self, data_dir, modifier=None, voxel_size=0.00001):   #adjust downsample size here
 
         self.data_dir = Path(data_dir)
 
@@ -43,7 +42,7 @@ class FogDataset:
 
 
         #downsample via voxel grid - disable with by commenting out 
-        if self.voxel_size is not None:
+        if self.voxel_size is not None and self.voxel_size > 0 and len(points) > 0:
             pcd = o3d.geometry.PointCloud()
             pcd.points = o3d.utility.Vector3dVector(points)
             pcd = pcd.voxel_down_sample(voxel_size=self.voxel_size)
