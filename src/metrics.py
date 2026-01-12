@@ -18,7 +18,7 @@ def evo_ape_kitti(gt, est, out_zip):
     stats = data.get("results", {}).get("stats", data)
     return stats
 
-def evo_rpe_kitti(gt, est, out_zip, delta_m=1):
+def evo_rpe_kitti(gt, est, out_zip, delta_m=100):
     r = run([
         "evo_rpe", "kitti", str(gt), str(est),
         "-a", "-r", "trans_part",

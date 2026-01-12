@@ -54,11 +54,11 @@ class FogSimulator:
         modify_mask = np.random.rand(N) < p_modify  # np.array of bools
 
         #probability of deletion 
-        p_delete = 1 + self.a * np.exp(self.b * self.V)
-        p_delete = np.clip(p_delete, 0, 1)  # Ensure valid probability 
+        self.p_delete = 1 + self.a * np.exp(self.b * self.V)
+        self.p_delete = np.clip(self.p_delete, 0, 1)  # Ensure valid probability 
 
         #sample points deletion  
-        delete_mask = modify_mask & (np.random.rand(N) < p_delete)
+        delete_mask = modify_mask & (np.random.rand(N) < self.p_delete)
 
         #delete points first
         kept_points = points[~delete_mask].copy()
@@ -94,6 +94,9 @@ class FogSimulator:
 
         #Intenstiy modification could be added here if needed
         
+        #Output 
+        return kept_points
+        
         '''
         # ===== START: GEOMETRIC DISTORTION ADDITION =====
         # Apply very light fog-like geometric distortion to simulate atmospheric warping
@@ -113,10 +116,6 @@ class FogSimulator:
             kept_points[:, 1] += wave_y
             kept_points[:, 2] += wave_z
         # ===== END: GEOMETRIC DISTORTION ADDITION =====
-
-        #Output 
-        return kept_points
-
         '''
 
 

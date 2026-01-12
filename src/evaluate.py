@@ -105,7 +105,9 @@ def main ():
                 total_pts = simulator.stats['total']
                 deleted_pts = simulator.stats['deleted']
                 backscattered_pts = simulator.stats['backscattered']
+                # Calculate p_delete using the formula (with clipping)
                 p_delete_val = 1 + simulator.a * np.exp(simulator.b * simulator.V)
+                p_delete_val = np.clip(p_delete_val, 0, 1)
                 lambda_val = simulator.lambda_
             else:
                 total_pts = 0
