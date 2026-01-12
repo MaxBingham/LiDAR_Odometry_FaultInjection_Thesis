@@ -92,7 +92,9 @@ class FogSimulator:
             
             self.stats['backscattered'] += N_move
 
-
+        #Intenstiy modification could be added here if needed
+        
+        '''
         # ===== START: GEOMETRIC DISTORTION ADDITION =====
         # Apply very light fog-like geometric distortion to simulate atmospheric warping
         if len(kept_points) > 0:
@@ -115,7 +117,8 @@ class FogSimulator:
         #Output 
         return kept_points
 
-     
+        '''
+
 
     def get_statistics(self):
         if self.stats['total'] == 0:
