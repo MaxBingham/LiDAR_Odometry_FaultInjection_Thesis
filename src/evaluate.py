@@ -39,8 +39,6 @@ def main ():
                     help="Path to KITTI ground-truth poses (.txt)")
     ap.add_argument("--sigma", type=float, nargs="+", required=True,
                     help="Gaussian Noise std in meters")
-    ap.add_argument("--seeds", type=int, nargs="+", default=[0],
-                    help="Random seeds for repeated runs")
     ap.add_argument("--output", default="results/fog_metrics.csv")
     ap.add_argument("--skip-metrics", action="store_true",
                     help="Skip evo metrics and CSV saving (only run Kiss-ICP)")
@@ -72,7 +70,6 @@ def main ():
             writer.writerow([
                 "run_id",
                 "sigma",
-                "seed",
                 "ape_rmse",
                 "rpe_rmse"
             ])
@@ -80,84 +77,81 @@ def main ():
 #loop
     run_id = 0
     for sigma in args.sigma:
-        for seed in args.seeds:
-            run_id += 1
-            np.random.seed(seed)
+        run_id += 1
 
-            #1 Create simulator based on fault type
-            if args.fault_type == 'gaussian':
-                simulator = GaussianNoiseSimulator(sigma=sigma)
-            elif args.fault_type == 'fog':
-                simulator = FogSimulator(distance=args.distance, V=args.visibility)
-            else:
-                raise ValueError(f"Unknown fault type: {args.fault_type}")
+        #1 Create simulator based on fault type
+        if args.fault_type == 'gaussian':
+            simulator = GaussianNoiseSimulator(sigma=sigma)
+        elif args.fault_type == 'fog':
+            simulator = FogSimulator(distance=args.distance, V=args.visibility)
+        else:
+            raise ValueError(f"Unknown fault type: {args.fault_type}")
 
-            #2 dataset
-            dataset = FogDataset(data_dir=args.data, modifier=simulator)
+        #2 dataset
+        dataset = FogDataset(data_dir=args.data, modifier=simulator)
 
-            #3 run odometry
-            poses = run_odometry(dataset)
-            est_path = out_dir / f"est_poses_sigma_{sigma:.2f}_seed_{seed}.txt"
-            save_poses_kitti(est_path, poses)
-            
-            # Collect fog statistics
-            if args.fault_type == 'fog':
-                total_pts = simulator.stats['total']
-                deleted_pts = simulator.stats['deleted']
-                backscattered_pts = simulator.stats['backscattered']
-                # Calculate p_delete using the formula (with clipping)
-                p_delete_val = 1 + simulator.a * np.exp(simulator.b * simulator.V)
-                p_delete_val = np.clip(p_delete_val, 0, 1)
-                lambda_val = simulator.lambda_
-            else:
-                total_pts = 0
-                deleted_pts = 0
-                backscattered_pts = 0
-                p_delete_val = 0
-                lambda_val = 0
-            
-            print(f"[Run {run_id}] fault_type={args.fault_type}, sigma={sigma:.3f}, seed={seed}")
-            print(f"  Saved: {est_path}")
-            if args.fault_type == 'fog':
-                print(f"  Fog Stats: Total={total_pts}, Deleted={deleted_pts}, Backscattered={backscattered_pts}")
-                print(f"  p_delete={p_delete_val:.3f}, lambda={lambda_val:.3f}m")
+        #3 run odometry
+        poses = run_odometry(dataset)
+        est_path = out_dir / f"est_poses_sigma_{sigma:.2f}.txt"
+        save_poses_kitti(est_path, poses)
+        
+        # Collect fog statistics
+        if args.fault_type == 'fog':
+            total_pts = simulator.stats['total']
+            deleted_pts = simulator.stats['deleted']
+            backscattered_pts = simulator.stats['backscattered']
+            # Calculate p_delete using the formula (with clipping)
+            p_delete_val = 1 + simulator.a * np.exp(simulator.b * simulator.V)
+            p_delete_val = np.clip(p_delete_val, 0, 1)
+            lambda_val = simulator.lambda_
+        else:
+            total_pts = 0
+            deleted_pts = 0
+            backscattered_pts = 0
+            p_delete_val = 0
+            lambda_val = 0
+        
+        print(f"[Run {run_id}] fault_type={args.fault_type}, sigma={sigma:.3f}")
+        print(f"  Saved: {est_path}")
+        if args.fault_type == 'fog':
+            print(f"  Fog Stats: Total={total_pts}, Deleted={deleted_pts}, Backscattered={backscattered_pts}")
+            print(f"  p_delete={p_delete_val:.3f}, lambda={lambda_val:.3f}m")
 
-            if not args.skip_metrics: #Can skip metrics (currently not working) by using argument: --skip-metrics
-                # 4) Run evo metrics
-                ape_stats = evo_ape_kitti(
-                    gt=args.gt,
-                    est=est_path,
-                    out_zip=out_dir / f"ape_sigma_{sigma:.2f}_seed_{seed}.zip"
-                )
+        if not args.skip_metrics: #Can skip metrics (currently not working) by using argument: --skip-metrics
+            # 4) Run evo metrics
+            ape_stats = evo_ape_kitti(
+                gt=args.gt,
+                est=est_path,
+                out_zip=out_dir / f"ape_sigma_{sigma:.2f}.zip"
+            )
 
-                rpe_stats = evo_rpe_kitti(
-                    gt=args.gt,
-                    est=est_path,
-                    out_zip=out_dir / f"rpe_sigma_{sigma:.2f}_seed_{seed}.zip"
-                )
+            rpe_stats = evo_rpe_kitti(
+                gt=args.gt,
+                est=est_path,
+                out_zip=out_dir / f"rpe_sigma_{sigma:.2f}.zip"
+            )
 
-                ape_rmse = ape_stats["rmse"]
-                rpe_rmse = rpe_stats["rmse"]
+            ape_rmse = ape_stats["rmse"]
+            rpe_rmse = rpe_stats["rmse"]
 
-                print(f"  APE RMSE: {ape_rmse:.3f} m")
-                print(f"  RPE RMSE: {rpe_rmse:.3f} m")
+            print(f"  APE RMSE: {ape_rmse:.3f} m")
+            print(f"  RPE RMSE: {rpe_rmse:.3f} m")
 
-                #csv
-                with open(csv_path, "a", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerow([
-                        run_id,
-                        args.fault_type,
-                        sigma,
-                        seed,
-                        ape_rmse,
-                        rpe_rmse,
-                        total_pts,
-                        deleted_pts,
-                        backscattered_pts,
-                        p_delete_val,
-                        lambda_val
-                    ])
+            #csv
+            with open(csv_path, "a", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow([
+                    run_id,
+                    args.fault_type,
+                    sigma,
+                    ape_rmse,
+                    rpe_rmse,
+                    total_pts,
+                    deleted_pts,
+                    backscattered_pts,
+                    p_delete_val,
+                    lambda_val
+                ])
     if not args.skip_metrics:
         print(f"\n✓ Done. Results saved to {csv_path}")
     else:

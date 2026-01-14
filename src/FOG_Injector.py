@@ -7,8 +7,9 @@ import numpy as np
 
 class FogSimulator:
 
-    def __init__(self, distance, V, a=-0.7, b=-0.024, epsilon = None, lambda_ = None):
+    def __init__(self, distance, V, a=-0.7, b=-0.024, a_turb = 1.5e-2, b_turb = 0.0015, c_turb = 0.6e-2, epsilon = None, lambda_ = None):
         
+
         self.distance = float(distance) #distance
         self.V = float(V) #visibility
         self.gamma = -np.log(0.05) / V
@@ -92,31 +93,35 @@ class FogSimulator:
             
             self.stats['backscattered'] += N_move
 
-        #Intenstiy modification could be added here if needed
-        
-        #Output 
+        #Intenstiy modification could be added here if needed - d_error model
+
+        unmodified_mask = ~(delete_mask | backscatter_mask)
+
+        '''   
+        if np.any(unmodified_mask):
+            # Calculate visibility-dependet distance error for unmodified points
+            #Formula: d_error = a_turb * exp(-b_turb * V) + c_turb --> Function fitted to data points from paper haider et al
+            d_error = self.a_turb * np.exp(-self.b_turb * self.V) + self.c_turb
+
+            #Distance-dependant scaling: 
+            distance_unmod =  np.linalg.norm(points[unmodified_mask], axis=1)   #Distance Calculation 
+            distance_scaling = np.clip(distance_unmod / self.V, 0, 1)           #Scaling Factor
+
+            #Per Point Turbulence 
+            d_error_point = d_error * distance_scaling 
+
+            N_unmod = np.sum(unmodified_mask)
+            displacement = np.random.normal(
+                loc=0.0,
+                scale=d_error_point[: , None],
+                size=(N_unmod, 3)
+            )
+
+            kept_points[unmodified_mask] = kept_points[unmodified_mask] + displacement
+            self.stats['error added'] += N_unmod 
+            '''
+       #Output 
         return kept_points
-        
-        '''
-        # ===== START: GEOMETRIC DISTORTION ADDITION =====
-        # Apply very light fog-like geometric distortion to simulate atmospheric warping
-        if len(kept_points) > 0:
-            distortion_strength = 0.0  # Very subtle distortion (1500cm scale)
-            
-            # Create wave-based displacement using point coordinates as input
-            x, y, z = kept_points[:, 0], kept_points[:, 1], kept_points[:, 2]
-            
-            # Generate smooth wave patterns for displacement
-            wave_x = distortion_strength * np.sin(y * 0.1 + z * 0.05)
-            wave_y = distortion_strength * np.cos(x * 0.1 + z * 0.05)
-            wave_z = distortion_strength * np.sin(x * 0.05 + y * 0.1) * 0.5  # Less vertical distortion
-            
-            # Apply distortion (additive displacement)
-            kept_points[:, 0] += wave_x
-            kept_points[:, 1] += wave_y
-            kept_points[:, 2] += wave_z
-        # ===== END: GEOMETRIC DISTORTION ADDITION =====
-        '''
 
 
     def get_statistics(self):
