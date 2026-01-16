@@ -1,6 +1,8 @@
 import numpy as np
 from pathlib import Path
 import open3d as o3d
+from FOG_Injector import FogSimulator
+
 
 "Load original scans" 
 def load_scan(filepath) -> np.ndarray:
