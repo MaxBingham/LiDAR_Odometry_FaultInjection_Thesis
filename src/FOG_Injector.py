@@ -7,7 +7,7 @@ import numpy as np
 
 class FogSimulator:
 
-    def __init__(self, distance, V, a=-0.7, b=-0.024, a_turb = 1.5e-2, b_turb = 0.0015, c_turb = 0.6e-2, epsilon = None, lambda_ = None):
+    def __init__(self, distance, V, a=-0.7, b=-0.024, epsilon = None, lambda_ = None):
         
 
         self.distance = float(distance) #distance
@@ -21,10 +21,15 @@ class FogSimulator:
         self.a = float(a)
         self.b = float(b)
 
+        self.a_turb = 1.5e-2    # 1.5 cm base turbulence amplitude
+        self.b_turb = 0.0015    # turbulence decay rate (1/m)
+        self.c_turb = 0.6e-2 
+
         self.stats = {
             'total': 0,
             'deleted': 0,
-            'backscattered': 0
+            'backscattered': 0,
+            'error_added': 0
             }
         
     
@@ -96,30 +101,43 @@ class FogSimulator:
         #Intenstiy modification could be added here if needed - d_error model
 
         unmodified_mask = ~(delete_mask | backscatter_mask)
-
-        '''   
-        if np.any(unmodified_mask):
+        unmodified_mask_kept = unmodified_mask[~delete_mask]
+        
+        if np.any(unmodified_mask_kept):
+            points_unmod = kept_points[unmodified_mask_kept]
             # Calculate visibility-dependet distance error for unmodified points
             #Formula: d_error = a_turb * exp(-b_turb * V) + c_turb --> Function fitted to data points from paper haider et al
-            d_error = self.a_turb * np.exp(-self.b_turb * self.V) + self.c_turb
+            p_error = self.a_turb * np.exp(-self.b_turb * self.V) + self.c_turb
 
             #Distance-dependant scaling: 
-            distance_unmod =  np.linalg.norm(points[unmodified_mask], axis=1)   #Distance Calculation 
-            distance_scaling = np.clip(distance_unmod / self.V, 0, 1)           #Scaling Factor
+            distance_unmod =  np.linalg.norm(points_unmod, axis=1)      #Distance Calculation 
+            distance_scaling = 1.0 - np.exp(-distance_unmod / self.V)   #Exponential scaling  factor (Uni Tübingen)
 
             #Per Point Turbulence 
-            d_error_point = d_error * distance_scaling 
+            d_error_point = p_error * distance_scaling
 
-            N_unmod = np.sum(unmodified_mask)
-            displacement = np.random.normal(
+            #Maximum 2cm error
+            #d_error_point = np.clip(d_error_point, 0, 0.20)
+
+            #Scaling in beam direction 
+            directions = points_unmod / np.clip(distance_unmod[:, None], 1e-6, None)
+
+            #Sample displacement
+            N_unmod = np.sum(unmodified_mask_kept)
+
+            range_error = np.random.normal(
                 loc=0.0,
                 scale=d_error_point[: , None],
                 size=(N_unmod, 3)
             )
 
-            kept_points[unmodified_mask] = kept_points[unmodified_mask] + displacement
-            self.stats['error added'] += N_unmod 
-            '''
+            #Apply displacement along beam direction
+            displacement = directions * range_error
+
+
+            kept_points[unmodified_mask_kept] = kept_points[unmodified_mask_kept] + displacement
+            self.stats['error_added'] += N_unmod 
+            
        #Output 
         return kept_points
 

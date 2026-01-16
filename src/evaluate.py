@@ -69,9 +69,15 @@ def main ():
         if write_header:
             writer.writerow([
                 "run_id",
+                "fault_type",
                 "sigma",
                 "ape_rmse",
-                "rpe_rmse"
+                "rpe_rmse",
+                "total_points",
+                "deleted_points",
+                "backscattered_points",
+                "p_delete",
+                "lambda_m"
             ])
 
 #loop

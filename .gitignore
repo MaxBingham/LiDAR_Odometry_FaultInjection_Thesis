@@ -18,6 +18,10 @@ results/
 # Data
 data/
 
+# External dependencies (not part of main project)
+LISA/
+src/TEST_Noise.py
+
 # IDE
 .vscode/
 .idea/
