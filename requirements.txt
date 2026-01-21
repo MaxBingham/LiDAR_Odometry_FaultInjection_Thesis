@@ -1,0 +1,13 @@
+# Core dependencies for LiDAR Odometry Fault Injection
+numpy>=1.24.0
+scipy>=1.10.0
+open3d>=0.17.0
+
+# Odometry and evaluation
+kiss-icp>=1.0.0
+evo>=1.20.0
+
+# Utilities
+pyyaml>=6.0
+tqdm>=4.65.0
+matplotlib>=3.7.0

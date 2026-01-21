@@ -2,6 +2,7 @@ import numpy as np
 from pathlib import Path
 import open3d as o3d
 from FOG_Injector import FogSimulator
+from RAIN_Injection import RainSimulator
 
 
 "Load original scans" 
@@ -28,13 +29,12 @@ class FogDataset:
         self.modifier = modifier
         self.voxel_size = voxel_size # stored vsize 
 
-        print(f"Foggy data loaded:{len(self.files)} scans")
+        print(f"modified data loaded:{len(self.files)} scans")
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, idx):
-
         #1 load raw scan 
         points = load_scan(self.files[idx])
 
