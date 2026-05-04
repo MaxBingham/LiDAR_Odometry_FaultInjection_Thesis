@@ -1,0 +1,25 @@
+keyframes:
+  - clean_idx: 50
+    fog_idx: 42
+    label: landmark_001
+
+  - clean_idx: 100
+    fog_idx: 85
+    label: landmark_002
+
+  - clean_idx: 200
+    fog_idx: 170
+    label: landmark_003
+
+  # Example: crop to a specific object (e.g. a street sign) before comparison.
+  # Omit any axis pair to leave that axis unconstrained.
+  # - clean_idx: 120
+  #   fog_idx: 102
+  #   label: street_sign_A
+  #   roi:
+  #     x_min: 10.0
+  #     x_max: 13.0
+  #     y_min: -1.5
+  #     y_max: 1.5
+  #     z_min: 0.0
+  #     z_max: 4.0

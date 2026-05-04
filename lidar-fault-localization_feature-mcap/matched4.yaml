@@ -1,0 +1,15 @@
+# Keyframes for matched fog sequence — match 4
+# Description: Innerstädtisch
+# Using absolute Unix epoch timestamps for precise temporal alignment
+#
+# Clean timestamp: 1770132581.505564676s
+# Fog timestamp:   1769785870.606942464s
+
+paths:
+  clean: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/NebelDaten/Nebel_Validierung/2026_02_03-15-28-39_perception_raw/2026_02_03-15-28-39_perception_raw_1.mcap
+  real_fog: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/NebelDaten/Nebel_Garching/2026_01_30-15-09-32_perception_raw/2026_01_30-15-09-32_perception_raw_1.mcap
+
+keyframes:
+  - clean_time: [1770132581.505564676, 12.449544661]
+    fog_time:   [1769785870.606942464, 12.449544661]
+    label: match4_matched_sequence

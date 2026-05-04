@@ -1,0 +1,39 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Packaging artifacts
+*.egg-info/
+build/
+
+# Data directories (not tracked)
+data/results/
+data/mcap/
+
+# Results directory (generated output)
+results/
+
+# Generated metrics and plots
+*.csv
+
+# Temporary stats files
+/tmp/lfi_*.json
+
+# Virtual environments
+venv/
+.env/
+.venv/
+.venv312/
+
+# IDE
+.vscode/
+
+# Matched sequence YAML files
+matched*.yaml
+
+# Proposed fixes
+proposed_fixes.md
+
+# Setup artifacts
+setup_output.log
+*.backup

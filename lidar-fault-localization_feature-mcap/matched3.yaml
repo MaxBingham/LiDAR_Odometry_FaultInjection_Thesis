@@ -1,0 +1,15 @@
+# Keyframes for matched fog sequence — match 3
+# Description: Landstraße
+# Using absolute Unix epoch timestamps for precise temporal alignment
+#
+# Clean timestamp: 1770132523.885000127s
+# Fog timestamp:   1769785781.206009379s
+
+paths:
+  clean: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/Match3/clean.mcap
+  real_fog: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/Match3/Fog.mcap
+
+keyframes:
+  - clean_time: [1770132523.885000127, 10.0]
+    fog_time:   [1769785781.206009379, 10.0]
+    label: match3_matched_sequence

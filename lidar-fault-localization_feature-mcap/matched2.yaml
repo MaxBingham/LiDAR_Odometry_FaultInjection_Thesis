@@ -1,0 +1,34 @@
+# Keyframes for matched fog sequence — Autobahn recording 2
+# Description: Autobahnauffahrt + Autobahn
+# Using absolute Unix epoch timestamps for precise temporal alignment
+#
+# Clean bag  (2_Clean_16.629.mcap):
+#   File start:      1770132825.600s
+#   Matched offset:  16.629s  (encoded in filename)
+#   Matched start:   1770132825.600 + 16.629 = 1770132842.229s
+#   Target frames:   338  (≈ 16.9 s @ ~20 fps — matches run 1 clean count)
+#
+# Fog bag    (2_Foggy_8.818.mcap):
+#   File start:      1769786040.903s
+#   Matched offset:   8.818s  (encoded in filename)
+#   Matched start:   1769786040.903 +  8.818 = 1769786049.721s
+#   Target frames:   283  (≈ 14.1 s @ ~20 fps — matches run 1 fog count)
+#
+# CLI usage:
+#   PYTHONPATH=src python -m lfa.mcap_validation.cli \
+#     --clean data/mcap/2_Clean_16.629.mcap \
+#     --real_fog data/mcap/2_Foggy_8.818.mcap \
+#     --visibility 140 \
+#     --skip_seconds_clean 16.629 --max_frames_clean 338 \
+#     --skip_seconds_fog 8.818   --max_frames_fog 283 \
+#     --output results/validation/autobahn2_v140
+
+paths:
+  clean: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/Match2/2_Clean_16.629.mcap
+  real_fog: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/Match2/2_Foggy_8.818.mcap
+
+keyframes:
+  # Matched sequence starting from the landmark offsets encoded in filenames
+  - clean_time: [1770132842.229, 16.9]
+    fog_time:   [1769786049.721, 14.1]
+    label: autobahn2_matched_sequence

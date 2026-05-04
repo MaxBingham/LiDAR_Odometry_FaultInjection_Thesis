@@ -1,0 +1,17 @@
+# Keyframes for matched fog sequence — match 5
+# Description: Garching Marktplatz
+# Using absolute Unix epoch timestamps for precise temporal alignment
+#
+# Clean timestamp: 1770132600.785984843s
+# Fog timestamp:   1769785893.652009893s
+#
+# ATTENTION: Vehicle stands in traffic during this sequence.
+
+paths:
+  clean: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/NebelDaten/Nebel_Validierung/2026_02_03-15-28-39_perception_raw/2026_02_03-15-28-39_perception_raw_1.mcap
+  real_fog: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/NebelDaten/Nebel_Garching/2026_01_30-15-09-32_perception_raw/2026_01_30-15-09-32_perception_raw_2.mcap
+
+keyframes:
+  - clean_time: [1770132600.785984843, 18.856015157]
+    fog_time:   [1769785893.652009893, 32.708990107]
+    label: match5_matched_sequence

@@ -1,0 +1,59 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# Packaging artifacts
+*.egg-info/
+build/
+dist/
+
+# Results and generated output
+results/
+plots/
+data/results/
+
+# Large data files
+*.mcap
+
+# Generated CSVs, logs, and lock files
+*.csv
+**/faulty_scans_*/
+**/sanity_overlays/
+.~lock.*
+
+# Generated plots and figures
+*.png
+*.pdf
+*.svg
+
+# Virtual environments
+venv/
+.env/
+.venv/
+.venv312/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+
+# Design notes
+proposed_fixes.md
+
+# Matched sequence keyframe files (generated per-run, except matched1-5.yaml)
+matched[6-9].yaml
+matched[1-9][0-9].yaml
+
+#random notes
+**/docs
+**/notebooks 

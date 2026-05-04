@@ -2,6 +2,8 @@
 
 Physics-based fog simulation for LiDAR odometry evaluation using Kiss-ICP on KITTI sequences.
 
+![Overview](Bild1.png)
+
 ## Project Structure
 
 ```

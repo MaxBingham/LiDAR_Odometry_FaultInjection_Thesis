@@ -1,0 +1,51 @@
+#!/bin/bash
+# Git post-checkout hook - automatically syncs environment after branch checkout
+# This file is version-controlled. Install it with: scripts/install-hooks.sh
+
+PREV_COMMIT=$1
+NEW_COMMIT=$2
+BRANCH_CHECKOUT=$3  # 1 = branch checkout, 0 = file checkout
+
+# Only run on branch checkout, not file checkout
+if [ "$BRANCH_CHECKOUT" != "1" ]; then
+    exit 0
+fi
+
+echo "🔄 Syncing environment after branch checkout..."
+
+# Get project root (where .git is)
+PROJECT_ROOT=$(git rev-parse --show-toplevel)
+cd "$PROJECT_ROOT" || exit 1
+
+# Activate venv if it exists
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+else
+    echo "⚠️  venv not found - skipping environment sync"
+    exit 0
+fi
+
+# Check if pyproject.toml or requirements changed
+CHANGED_FILES=$(git diff --name-only $PREV_COMMIT $NEW_COMMIT 2>/dev/null)
+
+if echo "$CHANGED_FILES" | grep -q "pyproject.toml\|requirements.txt"; then
+    echo "📦 Dependencies changed - full reinstall"
+    pip install -e . --quiet 2>&1 | grep -E "error|ERROR|Successfully installed" || true
+else
+    echo "📦 Quick reinstall (metadata only)"
+    pip install -e . --no-deps --quiet 2>&1 | grep -E "error|ERROR" || true
+fi
+
+# Check for KISS-ICP changes
+if echo "$CHANGED_FILES" | grep -q "external/kiss-icp\|kiss_icp_modifications"; then
+    echo "⚙️  KISS-ICP changed - rebuilding C++ extension"
+    rm -rf external/kiss-icp/python/build 2>/dev/null
+    export PATH="$(pwd)/venv/bin:$PATH"
+    pip install --no-build-isolation -e external/kiss-icp/python --quiet 2>&1 | grep -E "error|ERROR|Successfully" || true
+fi
+
+# Clear Python cache
+find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+find . -type f -name '*.pyc' -delete 2>/dev/null || true
+
+echo "✅ Environment synced"

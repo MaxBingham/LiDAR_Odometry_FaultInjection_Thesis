@@ -1,0 +1,19 @@
+# Keyframes for matched fog sequence
+# Description: Autobahn
+# Using absolute Unix epoch timestamps for precise temporal alignment
+#
+# Clean bag starts at: 1770133066.870s
+# Fog bag starts at: 1769786241.163s
+# Matched landmark: Clean 8.129s → Fog 28.376s (relative to bag starts)
+# Calculated: Clean = 1770133066.870 + 8.129 = 1770133074.999s
+#            Fog   = 1769786241.163 + 28.376 = 1769786269.539s
+
+paths:
+  clean: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/Match1/2026_02_03-15-33-44_perception_raw_4.mcap
+  real_fog: /media/ubuntu/Linux Mint 21_3 Cinnamon 64-bit/Match1/2026_01_30-15-14-00_perception_raw_3.mcap
+
+keyframes:
+  # 10-second matched sequence starting from landmark
+  - clean_time: [1770133074.999, 10.0]
+    fog_time: [1769786269.539, 10.0]
+    label: nebel_matched_sequence
