@@ -1,91 +1,111 @@
-# LiDAR Odometry Fault Injection - KITTI Dataset
+# LiDAR Weather-Fault Injection for Odometry Robustness
 
-Physics-based fog simulation for LiDAR odometry evaluation using Kiss-ICP on KITTI sequences.
+Bachelor-thesis code for evaluating how simulated fog and rain affect LiDAR
+odometry. The canonical pipeline injects weather faults while KITTI scans are
+loaded by KISS-ICP, then aggregates trajectory error with EVO.
 
-![Overview](Bild1.png)
+![Project point-cloud visualization](Bild1.png)
 
-## Project Structure
+## What this project is
 
-```
-fault_injector_minimal/
-├── configs/                    # Fog configuration files
-│   ├── fog_200m.yaml          # Very clear (200m visibility)
-│   ├── fog_very_light.yaml    # Minimal fog (150m visibility)
-│   ├── fog_light.yaml         # Light fog (100m visibility)
-│   ├── fog_medium.yaml        # Medium fog (50m visibility)
-│   ├── fog_heavy.yaml         # Heavy fog (20m visibility)
-│   └── fog_very_heavy.yaml    # Severe fog (10m visibility)
-│
-├── src/                        # Source code
-│   ├── evaluate.py            # Main evaluation script
-│   ├── batch_evaluate.py      # Batch processing for multiple configs
-│   ├── FOG_Injector.py        # Physics-based fog simulation
-│   ├── fog_dataset.py         # Dataset wrapper with fault injection
-│   └── metrics.py             # Trajectory error metrics (APE/RPE)
-│
-├── testing/                    # Testing utilities
-│   ├── TEST_Noise.py          # Gaussian noise simulator
-│   └── OPTIONAL_visualizeo3d.py # Point cloud/trajectory visualization
-│
-├── data/                       # KITTI dataset (not tracked)
-│   ├── 07/velodyne/           # .bin point cloud files
-│   └── 07.txt                 # Ground truth poses
-│
-└── results/                    # Output directory (auto-created)
-    ├── *.txt                  # Estimated poses (KITTI format)
-    ├── *.csv                  # Aggregated metrics
-    └── *.zip                  # EVO result archives
+This is **fault-injection and robustness-evaluation infrastructure**. It is not
+an onboard fault detector, fault classifier, diagnostic monitor, or recovery
+system.
+
+```text
+KITTI scan -> fog/rain injector -> modified KISS-ICP loader -> odometry
+                                                        \-> EVO APE/RPE
+batch runner --------------------------------------------> CSV summaries
 ```
 
-## Dependencies
+The canonical fog model operates on XYZ point clouds. It probabilistically
+selects returns as a function of range, deletes a subset, and moves the
+remaining selected returns toward the sensor to model backscatter. It does not
+apply intensity attenuation in the odometry pipeline.
+
+## My thesis contribution
+
+My work in this repository centers on:
+
+- adapting the published Teufel et al. fog parameterization to an XYZ-only
+  odometry path and developing the rain-model variant;
+- injection hooks in the KISS-ICP KITTI data-loading path;
+- parameter sweeps and fault statistics;
+- EVO-based absolute and relative pose-error evaluation; and
+- a separate experimental path for comparing simulated fog with real-fog MCAP
+  recordings.
+
+KISS-ICP, EVO, KITTI, and the underlying published fog-model parameterization
+are external work. The repository adapts and integrates them for the thesis
+experiments rather than claiming them as original components.
+
+## Start here
+
+| Path | Status | Purpose |
+|---|---|---|
+| `lidar-fault-localization_weather_faults/` | **Canonical** | Fog/rain injection, KISS-ICP integration, KITTI runs, EVO metrics, batch sweeps |
+| `lidar-fault-localization_feature-mcap/` | Experimental | Simulated-vs-real fog analysis; requires MCAP recordings that are not public |
+| `src/`, `configs/`, `testing/` | Legacy prototype | Early KITTI prototype retained for history; do not use as the primary pipeline |
+| `tests/` | Portable | Synthetic, no-dataset smoke tests for the canonical fog injector |
+
+The detailed weather-pipeline documentation is in
+[`lidar-fault-localization_weather_faults/README.md`](lidar-fault-localization_weather_faults/README.md).
+The MCAP subtree uses a separate, intensity-aware fog variant that is not used
+by the KITTI odometry pipeline.
+
+## Portable smoke test
+
+The fault model can be checked without KITTI, KISS-ICP, or a GPU:
 
 ```bash
-pip install kiss-icp evo numpy open3d pyyaml
+python3 -m venv .venv
+source .venv/bin/activate
+pip install numpy
+python -m unittest discover -s tests -v
 ```
 
-## Usage
+The test verifies deterministic seeded injection, the XYZ output contract, and
+the injector's deletion statistics.
 
-### Single Evaluation Run
+## Full KITTI pipeline
+
+The automated setup script targets Linux and installs system build dependencies,
+creates a Python environment, prepares KISS-ICP, and applies the local loader
+modifications:
 
 ```bash
-python src/evaluate.py \
-  --data data/07/velodyne \
-  --gt data/07.txt \
-  --sigma 0.0 \
-  --fault-type fog \
-  --visibility 50.0 \
-  --distance 100.0 \
-  --output results/fog_metrics.csv
+cd lidar-fault-localization_weather_faults
+./setup.sh
+source venv/bin/activate
+
+# Baseline
+lfl_pipeline --sequence 07 --data_root data/kitti --fault_model none
+
+# Fog at 50 m visibility
+lfl_pipeline --sequence 07 --data_root data/kitti \
+  --fault_model fog --visibility 50
+
+# Parameter sweep
+python -m lfl.runner --fault_model fog \
+  --sequence 07 --data_root data/kitti
 ```
 
-### Arguments
+Download KITTI odometry scans and poses separately and place them under
+`lidar-fault-localization_weather_faults/data/kitti/` as described in the
+pipeline README.
 
-- `--data`: Path to KITTI velodyne folder
-- `--gt`: Path to ground truth poses (.txt)
-- `--sigma`: Standard deviation for Gaussian noise (set to 0.0 when using fog)
-- `--fault-type`: Choose `fog` or `gaussian`
-- `--visibility`: Fog visibility distance in meters (V)
-- `--distance`: Distance parameter for fog simulation
-- `--output`: CSV output path
-- `--skip-metrics`: Skip evo metrics calculation (faster, poses only)
+## Reproducibility boundaries
 
-### Batch Evaluation (Coming Soon)
+- KITTI data is not redistributed.
+- Experiment outputs and benchmark figures are not committed, so this repository
+  does not currently provide independently checkable performance numbers.
+- The full build script is Linux-specific; the portable injector tests run
+  independently of KISS-ICP.
+- The MCAP validation path references private recordings and is not reproducible
+  from this clone.
+- Random seeds are supported by the fog model, but the main experiment CLI does
+  not yet expose seed selection.
 
-```bash
-python src/batch_evaluate.py
-```
-
-## Output
-
-- **Estimated poses**: `results/est_poses_sigma_{value}.txt` (KITTI format)
-- **Metrics CSV**: Contains APE RMSE, RPE RMSE, and fog statistics per run
-- **Statistics**: Total points, deleted points, backscattered points, p_delete, lambda
-
-## Fog Model
-
-Implements Beer-Lambert law for atmospheric attenuation:
-- **Point deletion**: Extinction based on visibility
-- **Backscattering**: Exponential range distribution
-- **Atmospheric turbulence**: Distance-dependent geometric distortion
-
-Parameters automatically computed from visibility (V) using empirical models.
+These limits are intentional to state plainly: the repository demonstrates the
+implementation and evaluation pipeline, not a packaged benchmark result or a
+fault-detection product.

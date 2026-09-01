@@ -33,9 +33,8 @@ pcmod_pipeline/
 ### 1. Repository klonen
 
 ```bash
-git clone https://gitlab.lrz.de/avsafety/research_niji/pcmod_pipeline.git
-cd pcmod_pipeline
-git checkout BA/Max/Faults_Localization
+git clone https://github.com/MaxBingham/LiDAR_Odometry_FaultInjection_Thesis.git
+cd LiDAR_Odometry_FaultInjection_Thesis/lidar-fault-localization_weather_faults
 ```
 
 ### 2. Setup-Skript ausführen

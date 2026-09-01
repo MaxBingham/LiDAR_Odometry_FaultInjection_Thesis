@@ -1,4 +1,8 @@
-# LiDAR Fog Validation – MCAP-Gesamtarchitektur (`BA/Max/Faults_Validation`)
+# LiDAR Fog Validation – MCAP Architecture
+
+> **Experimental, non-portable path:** this subtree requires real-fog MCAP
+> recordings that are not public. Use `lidar-fault-localization_weather_faults/`
+> for the canonical KITTI odometry pipeline.
 
 Dieses Repository enthält die **Python-basierte Validierungs-Pipeline** für das synthetische Nebelmodell.  
 Die Pipeline lädt **MCAP-Aufnahmen** (sauber vs. realer Nebel), modifiziert die sauberen Scans zu **Nebel Scans** und vergleicht **Verteilungen** sowie optional **geometrische und Intensitätsmetriken**.
@@ -35,9 +39,8 @@ lidar-fault-localization_feature-mcap/
 ### 1. Repository klonen und Branch auschecken
 
 ```bash
-git clone https://gitlab.lrz.de/avsafety/research_niji/pcmod_pipeline.git
-cd pcmod_pipeline
-git checkout BA/Max/Faults_Validation
+git clone https://github.com/MaxBingham/LiDAR_Odometry_FaultInjection_Thesis.git
+cd LiDAR_Odometry_FaultInjection_Thesis/lidar-fault-localization_feature-mcap
 ```
 
 ### 2. Python-Umgebung einrichten
